@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Dash Browser</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  /* Base theme variables (Light) */
+  :root {
+    --bg: #ffffff;
+    --fg: #0b1627;
+    --toolbar: #0d47a1;
+    --toolbar-2: #123b8a;
+    --accent: #d32f2f;     /* red */
+    --accent-2: #b71c1c;   /* deep red */
+    --primary: #0d47a1;    /* blue */
+    --primary-2: #123b8a;
+    --card: #f7f9fc;
+    --muted: #e0e6f3;
+    --shadow: 0 10px 30px rgba(0,0,0,0.12);
+    --tab-glow: rgba(211,47,47,0.6);
+    --logo-neon-blue: #00ccff;
+    --logo-neon-red: #ff0033;
+  }
+
+  /* Dark Neon */
+  :root.dark {
+    --bg: #0f1218;
+    --fg: #b8d6ff;
+    --toolbar: #1a237e;
+    --toolbar-2: #151b5a;
+    --accent: #ff5252;
+    --accent-2: #ff2d2d;
+    --primary: #4aa8ff;
+    --primary-2: #2a68c8;
+    --card: #171b24;
+    --muted: #26324a;
+    --shadow: 0 10px 30px rgba(0,0,0,0.35);
+    --tab-glow: rgba(74,168,255,0.65);
+    --logo-neon-blue: #39c6ff;
+    --logo-neon-red: #ff5a7a;
+  }
+
+  /* Cyberpunk */
+  :root.cyberpunk {
+    --bg: #0a0f1e;
+    --fg: #c8faff;
+    --toolbar: #6a00ff;
+    --toolbar-2: #ff00c8;
+    --accent: #00fff7;
+    --accent-2: #ff00c8;
+    --primary: #6a00ff;
+    --primary-2: #3f00a8;
+    --card: #14162a;
+    --muted: #312a4a;
+    --shadow: 0 10px 30px rgba(106,0,255,0.35);
+    --tab-glow: rgba(0,255,247,0.55);
+    --logo-neon-blue: #00fff7;
+    --logo-neon-red: #ff00c8;
+  }
+
+  /* Matrix */
+  :root.matrix {
+    --bg: #000000;
+    --fg: #b4ffb4;
+    --toolbar: #003300;
+    --toolbar-2: #001a00;
+    --accent: #00ff00;
+    --accent-2: #22ff22;
+    --primary: #00aa00;
+    --primary-2: #007700;
+    --card: #0c0c0c;
+    --muted: #113311;
+    --shadow: 0 10px 30px rgba(0,255,0,0.2);
+    --tab-glow: rgba(0,255,0,0.5);
+    --logo-neon-blue: #7aff7a;
+    --logo-neon-red: #00ff00;
+  }
+
+  /* Sunset */
+  :root.sunset {
+    --bg: #fff5e6;
+    --fg: #4b2b2b;
+    --toolbar: #ff9966;
+    --toolbar-2: #ff5e62;
+    --accent: #ff3366;
+    --accent-2: #cc0033;
+    --primary: #ff7c4d;
+    --primary-2: #ff5e62;
+    --card: #ffe9dc;
+    --muted: #ffc7b0;
+    --shadow: 0 10px 30px rgba(255,94,98,0.25);
+    --tab-glow: rgba(255,51,102,0.5);
+    --logo-neon-blue: #ffd9e2;
+    --logo-neon-red: #ff3366;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin:0; font-family: Inter, Segoe UI, Arial, sans-serif;
+    background: var(--bg); color: var(--fg);
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+
+  /* Tabs */
+  .tabs {
+    display:flex; align-items:center; gap:8px; padding:8px 8px;
+    background: linear-gradient(180deg, var(--toolbar), var(--toolbar-2));
+    box-shadow: var(--shadow); position:sticky; top:0; z-index:10;
+  }
+  .tab {
+    min-width: 120px; max-width: 280px;
+    padding:10px 14px; border-radius:10px 10px 0 0;
+    background: linear-gradient(180deg, #fff, #f0f4ff);
+    color:#0b1627; cursor:pointer; position:relative;
+    box-shadow: 0 0 12px var(--tab-glow);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    border:1px solid var(--muted);
+    transition: transform 0.12s ease, box-shadow 0.2s ease;
+  }
+  .tab:hover { transform: translateY(-1px); }
+  :root.dark .tab { background: linear-gradient(180deg, #0d1117, #0b1524); color: var(--fg); }
+  :root.cyberpunk .tab { background: linear-gradient(180deg, #1a1a2e, #0a0f1e); color: var(--fg); }
+  :root.matrix .tab { background: linear-gradient(180deg, #0c0c0c, #000); color: var(--fg); }
+  :root.sunset .tab { background: linear-gradient(180deg, #fff, #ffe6d9); color: var(--fg); }
+
+  .tab.active {
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    color:#fff; box-shadow: 0 0 16px var(--tab-glow);
+  }
+  .tab .close {
+    position:absolute; right:8px; top:6px; cursor:pointer; font-weight:700;
+    color: inherit;
+  }
+  .add-tab {
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    color:#fff; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:800;
+    box-shadow: 0 0 12px var(--tab-glow); user-select:none;
+  }
+
+  /* Toolbar */
+  .toolbar {
+    background: linear-gradient(180deg, var(--toolbar), var(--toolbar-2));
+    display:flex; align-items:center; gap:10px; padding:12px; box-shadow: var(--shadow);
+  }
+  .brand { color:#fff; font-weight:900; letter-spacing:0.6px; margin-right:6px; text-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+  .omnibox {
+    flex:1; display:flex; align-items:center; gap:8px; background:#fff;
+    border-radius:14px; padding:8px 12px; border:1px solid var(--muted); box-shadow: var(--shadow);
+  }
+  :root.dark .omnibox,
+  :root.cyberpunk .omnibox,
+  :root.matrix .omnibox { background:#0d1117; border-color: var(--muted); }
+  .url-input { flex:1; border:none; outline:none; font-size:15px; color: var(--fg); background: transparent; }
+  .btn {
+    padding:8px 14px; border:none; border-radius:12px;
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    color:#fff; font-weight:700; cursor:pointer;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+    transition: transform 0.12s ease, filter 0.2s ease;
+  }
+  .btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .btn:active { transform: translateY(0); }
+  .toolbar-select {
+    border:none; border-radius:12px; padding:8px 12px; font-weight:700;
+    background: #fff; color: var(--fg); box-shadow: var(--shadow); outline:none;
+  }
+  :root.dark .toolbar-select,
+  :root.cyberpunk .toolbar-select,
+  :root.matrix .toolbar-select { background: #0d1117; color: var(--fg); }
+
+  /* Bookmarks */
+  .bookmarks { display:flex; gap:12px; padding:12px; }
+  .bookmark {
+    padding:10px 16px; border-radius:999px; background: var(--card); color: var(--fg);
+    border:1px solid var(--muted); box-shadow: var(--shadow); cursor:pointer; font-weight:700;
+    transition: transform 0.12s ease, filter 0.2s ease, background 0.2s ease, color 0.2s ease;
+  }
+  .bookmark:hover { transform: translateY(-1px); background: var(--accent); color:#fff; border-color: transparent; }
+
+  /* Content area */
+  .content {
+    position:relative; margin:12px; border-radius:18px; overflow:hidden;
+    background: var(--card); box-shadow: var(--shadow); height: calc(100vh - 210px);
+  }
+  .tab-pane { position:absolute; inset:0; display:none; }
+  .tab-pane.active { display:block; }
+  iframe {
+    position:absolute; inset:0; width:100%; height:100%; border:none; display:none; background: var(--bg);
+  }
+  iframe.visible { display:block; }
+
+  /* Homepage (Dash) */
+  .homepage { position:absolute; inset:0; display:none; place-items:center; background: var(--bg); }
+  .homepage.visible { display:grid; }
+  .home-inner { max-width:820px; width:100%; text-align:center; padding:24px; }
+
+  /* Neon Logo animation */
+  @keyframes neonPulse {
+    0%, 100% {
+      color: var(--logo-neon-blue);
+      text-shadow:
+        0 0 6px var(--logo-neon-blue),
+        0 0 14px var(--logo-neon-blue),
+        0 0 30px var(--logo-neon-red),
+        0 0 40px var(--logo-neon-red);
+      transform: scale(1);
+    }
+    50% {
+      color: var(--logo-neon-red);
+      text-shadow:
+        0 0 12px var(--logo-neon-red),
+        0 0 24px var(--logo-neon-red),
+        0 0 40px var(--logo-neon-blue);
+      transform: scale(1.05);
+    }
+  }
+  .logo {
+    font-size:72px; font-weight:900; margin-bottom:20px;
+    animation: neonPulse 3s infinite ease-in-out;
+  }
+  .logo.off { animation: none; color: var(--fg); text-shadow: none; }
+
+  .home-row {
+    display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:18px;
+  }
+  .search-form {
+    display:flex; gap:10px; max-width:680px; margin:0 auto;
+    background:#fff; border:1px solid var(--muted); border-radius:24px; padding:12px 16px; box-shadow: var(--shadow);
+  }
+  :root.dark .search-form,
+  :root.cyberpunk .search-form,
+  :root.matrix .search-form { background:#0d1117; }
+  .search-input {
+    flex:1; border:none; outline:none; font-size:16px; color: var(--fg); background: transparent;
+  }
+  .search-btn {
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    border:none; padding:10px 18px; border-radius:12px; color:#fff; font-weight:800; cursor:pointer;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+    transition: transform 0.12s ease, filter 0.2s ease;
+  }
+  .search-btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+
+  .shortcuts { display:flex; gap:14px; justify-content:center; margin-top:22px; flex-wrap:wrap; }
+  .shortcut {
+    padding:10px 16px; border-radius:999px; background: var(--card); color: var(--fg);
+    border:1px solid var(--muted); font-weight:700; text-decoration:none; box-shadow: var(--shadow);
+    transition: transform 0.12s ease, filter 0.2s ease, background 0.2s ease, color 0.2s ease;
+  }
+  .shortcut:hover { transform: translateY(-1px); background: var(--accent); color:#fff; border-color: transparent; }
+
+  .theme-toggle {
+    margin-top:24px; display:inline-block; padding:10px 16px; border-radius:12px;
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    color:#fff; font-weight:800; cursor:pointer; box-shadow: var(--shadow);
+    transition: transform 0.12s ease, filter 0.2s ease;
+  }
+  .theme-toggle:hover { transform: translateY(-1px); filter: brightness(1.05); }
+
+  /* About button + popup */
+  .about-btn {
+    background: none; border: none; color: #fff; font-weight: 700; cursor: pointer;
+    text-decoration: underline dotted;
+  }
+  .about-btn:hover { color: var(--accent); }
+  .about-window {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; place-items: center; z-index: 999;
+  }
+  .about-content {
+    background: var(--card); color: var(--fg); padding: 24px; border-radius: 12px;
+    box-shadow: var(--shadow); text-align: center;
+  }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .logo { font-size:56px; }
+    .tab { min-width: 96px; }
+    .search-btn, .btn { padding:8px 12px; }
+    .toolbar-select { padding:6px 10px; }
+  }
+</style>
+</head>
+<body>
+  <!-- Tabs -->
+  <div class="tabs" id="tabStrip"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="brand">Dash Browser</div>
+    <div class="omnibox">
+      <input id="urlBar" class="url-input" value="dash:/newtab" placeholder="Search or enter address" />
+      <button class="btn" id="goBtn">Go</button>
+    </div>
+    <button class="btn" id="themeBtn">Toggle Dark/Light</button>
+    <select id="themeSelector" class="toolbar-select" title="Theme">
+      <option value="">Light</option>
+      <option value="dark">Dark Neon</option>
+      <option value="cyberpunk">Cyberpunk</option>
+      <option value="matrix">Matrix</option>
+      <option value="sunset">Sunset</option>
+    </select>
+    <button class="about-btn" id="aboutBtn">About</button>
+    <div class="add-tab" id="addTabBtn">＋</div>
+  </div>
+
+  <!-- Bookmarks -->
+  <div class="bookmarks">
+    <div class="bookmark" data-url="https://google.com/?igu=1">Google</div>
+    <div class="bookmark" data-url="https://krizdev.github.io/Angry-Birds-Chrome-Revived/">Angry Birds</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="contentArea"></div>
+
+  <!-- About Popup -->
+  <div id="aboutWindow" class="about-window">
+    <div class="about-content">
+      <h2>Copyright MLG</h2>
+      <button id="closeAbout" class="btn">Close</button>
+    </div>
+  </div>
+
+<script>
+(function() {
+  // State
+  let tabs = [];
+  let activeTabIndex = -1;
+  let nextId = 0;
+
+  // Elements
+  const tabStrip = document.getElementById('tabStrip');
+  const contentArea = document.getElementById('contentArea');
+  const urlBar = document.getElementById('urlBar');
+  const goBtn = document.getElementById('goBtn');
+  const themeBtn = document.getElementById('themeBtn');
+  const addTabBtn = document.getElementById('addTabBtn');
+  const themeSelector = document.getElementById('themeSelector');
+
+  // Create Dash homepage (per-tab)
+  function createHomepage() {
+    const home = document.createElement('div');
+    home.className = 'homepage visible';
+    home.innerHTML = `
+      <div class="home-inner">
+        <div class="logo">Dash</div>
+        <button class="btn" id="toggleLogo">Toggle Logo Animation</button>
+        <div class="home-row">
+          <div class="theme-toggle" data-action="toggle-theme">Toggle Dark/Light Mode</div>
+        </div>
+        <form class="search-form">
+          <input class="search-input" type="text" placeholder="Search or type a URL" />
+          <button class="search-btn" type="submit">Search</button>
+        </form>
+        <div class="shortcuts">
+          <a class="shortcut" href="#" data-url="https://google.com/?igu=1">Google</a>
+          <a class="shortcut" href="#" data-url="https://krizdev.github.io/Angry-Birds-Chrome-Revived/">Angry Birds</a>
+        </div>
+      </div>
+    `;
+    // Wire homepage events
+    const form = home.querySelector('.search-form');
+    const input = home.querySelector('.search-input');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = (input.value || '').trim();
+      if (!q) return;
+      const target = (q.startsWith('http://') || q.startsWith('https://'))
+        ? q
+        : 'https://google.com/?igu=1&q=' + encodeURIComponent(q);
+      setActiveTabURL(target);
+    });
+    home.querySelectorAll('.shortcut').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = el.dataset.url;
+        setActiveTabURL(target);
+      });
+    });
+    const localToggle = home.querySelector('[data-action="toggle-theme"]');
+    localToggle.addEventListener('click', toggleDarkLight);
+
+    // Logo animation toggle
+    const logo = home.querySelector('.logo');
+    const toggleLogoBtn = home.querySelector('#toggleLogo');
+    toggleLogoBtn.addEventListener('click', () => {
+      logo.classList.toggle('off');
+    });
+
+    return home;
+  }
+
+  // Add a new tab
+  function addTab(initialURL = 'dash:/newtab') {
+    const id = nextId++;
+    const pane = document.createElement('div');
+    pane.className = 'tab-pane';
+    pane.id = 'pane-' + id;
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'frame-' + id;
+
+    const homepage = createHomepage();
+
+    pane.appendChild(homepage);
+    pane.appendChild(iframe);
+    contentArea.appendChild(pane);
+
+    const tabObj = { id, url: initialURL, pane, iframe, homepage };
+    tabs.push(tabObj);
+    switchTab(tabs.length - 1);
+    setActiveTabURL(initialURL);
+  }
+
+  // Switch active tab
+  function switchTab(idx) {
+    if (idx < 0 || idx >= tabs.length) return;
+    activeTabIndex = idx;
+    tabs.forEach(t => t.pane.classList.remove('active'));
+    tabs[activeTabIndex].pane.classList.add('active');
+    urlBar.value = tabs[activeTabIndex].url;
+    renderActiveTab();
+    renderTabStrip();
+  }
+
+  // Close a tab
+  function closeTab(idx) {
+    if (tabs.length === 1) return; // keep at least one
+    const t = tabs[idx];
+    t.pane.remove();
+    tabs.splice(idx, 1);
+    if (activeTabIndex >= tabs.length) activeTabIndex = tabs.length - 1;
+    switchTab(activeTabIndex);
+  }
+
+  // Render tab strip
+  function renderTabStrip() {
+    tabStrip.innerHTML = '';
+    tabs.forEach((t, idx) => {
+      const el = document.createElement('div');
+      el.className = 'tab' + (idx === activeTabIndex ? ' active' : '');
+      el.textContent = t.url === 'dash:/newtab' ? 'New Tab' : t.url;
+      el.title = t.url;
+      el.onclick = () => switchTab(idx);
+
+      const close = document.createElement('span');
+      close.className = 'close';
+      close.textContent = '✕';
+      close.onclick = (e) => { e.stopPropagation(); closeTab(idx); };
+
+      el.appendChild(close);
+      tabStrip.appendChild(el);
+    });
+  }
+
+  // Show homepage or iframe for active tab
+  function renderActiveTab() {
+    const t = tabs[activeTabIndex];
+    if (t.url === 'dash:/newtab') {
+      t.homepage.classList.add('visible');
+      t.iframe.classList.remove('visible');
+      t.iframe.removeAttribute('src');
+    } else {
+      t.homepage.classList.remove('visible');
+      t.iframe.classList.add('visible');
+      if (t.iframe.src !== t.url) t.iframe.src = t.url;
+    }
+  }
+
+  // Set URL for active tab
+  function setActiveTabURL(url) {
+    const t = tabs[activeTabIndex];
+    t.url = url;
+    urlBar.value = url;
+    renderActiveTab();
+    renderTabStrip();
+  }
+
+  // Omnibox navigation
+  function navigateInput(raw) {
+    const input = (raw || '').trim();
+    if (!input || input === 'dash:/newtab') {
+      setActiveTabURL('dash:/newtab');
+      return;
+    }
+    const target = (input.startsWith('http://') || input.startsWith('https://'))
+      ? input
+      : 'https://google.com/?igu=1&q=' + encodeURIComponent(input);
+    setActiveTabURL(target);
+  }
+
+  // Toggle dark/light
+  function toggleDarkLight() {
+    const root = document.documentElement;
+    if (root.classList.contains('dark')) {
+      root.classList.remove('dark');
+    } else {
+      root.classList.add('dark');
+      root.classList.remove('cyberpunk', 'matrix', 'sunset');
+    }
+  }
+
+  // Theme selection
+  themeSelector.addEventListener('change', () => {
+    const val = themeSelector.value;
+    const root = document.documentElement;
+    root.className = ''; // reset to light
+    if (val) root.classList.add(val);
+  });
+
+  // Wire controls
+  goBtn.addEventListener('click', () => navigateInput(urlBar.value));
+  urlBar.addEventListener('keydown', (e) => { if (e.key === 'Enter') navigateInput(urlBar.value); });
+  themeBtn.addEventListener('click', toggleDarkLight);
+  addTabBtn.addEventListener('click', () => addTab('dash:/newtab'));
+
+  // Bookmarks
+  document.querySelectorAll('.bookmark').forEach(b => {
+    b.addEventListener('click', () => {
+      const target = b.dataset.url;
+      setActiveTabURL(target);
+    });
+  });
+
+  // About popup logic + shortcut
+  const aboutBtn = document.getElementById('aboutBtn');
+  const aboutWindow = document.getElementById('aboutWindow');
+  const closeAbout = document.getElementById('closeAbout');
+  aboutBtn.addEventListener('click', () => { aboutWindow.style.display = 'grid'; });
+  closeAbout.addEventListener('click', () => { aboutWindow.style.display = 'none'; });
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key.toLowerCase() === 'i') {
+      e.preventDefault();
+      aboutWindow.style.display = 'grid';
+    }
+  });
+
+  // Init
+  addTab('dash:/newtab');
+})();
+</script>
+</body>
+</html>
